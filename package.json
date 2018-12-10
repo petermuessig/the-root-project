@@ -1,0 +1,20 @@
+{
+  "name": "the-root-project",
+  "version": "0.0.1",
+  "description": "The ROOT project",
+  "private": true,
+  "scripts": {
+    "start": "ui5 serve -o index.html",
+    "build": "rimraf dist && ui5 build self-contained"
+  },
+  "dependencies": {
+    "@openui5/sap.m": "^1.60.2",
+    "@openui5/sap.ui.core": "^1.60.2",
+    "@openui5/sap.ui.layout": "^1.60.2",
+    "@openui5/themelib_sap_belize": "^1.60.2"
+  },
+  "devDependencies": {
+    "@ui5/cli": "^0.2.7",
+    "rimraf": "^2.6.2"
+  }
+}
