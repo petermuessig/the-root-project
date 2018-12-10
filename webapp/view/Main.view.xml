@@ -1,11 +1,69 @@
-<mvc:View controllerName="root.controller.Main" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:mvc="sap.ui.core.mvc"
-	displayBlock="true" xmlns="sap.m">
-	<App id="idAppControl">
-		<pages>
-			<Page title="{i18n>title}">
-				<content>
-				</content>
-			</Page>
-		</pages>
-	</App>
+<mvc:View controllerName="root.controller.Main"
+		xmlns:mvc="sap.ui.core.mvc"
+		xmlns:layout="sap.ui.layout"
+		xmlns:table="sap.ui.table"
+		displayBlock="true"
+		xmlns="sap.m">
+	<layout:FixFlex>
+		<layout:fixContent>
+			<OverflowToolbar>
+				<Button text="Browser" type="Transparent" />
+				<Button text="File" type="Transparent" />
+				<Button text="Edit" type="Transparent" />
+				<Button text="View" type="Transparent" />
+				<Button text="Options" type="Transparent" />
+				<Button text="Tools" type="Transparent" />
+				<ToolbarSpacer/>
+				<Button text="Help" type="Transparent" />
+			</OverflowToolbar>
+		</layout:fixContent>
+		<layout:flexContent>
+			<SplitApp id="idAppControl">
+				<masterPages>
+					<Page>
+						<customHeader>
+							<OverflowToolbar>
+								<Button icon="sap-icon://sort" type="Transparent" />
+								<Button icon="sap-icon://filter" type="Transparent" />
+								<Button icon="sap-icon://synchronize" type="Transparent" />
+								<!-- <Label text="Draw:" /> -->
+								<ComboBox />
+							</OverflowToolbar>
+						</customHeader>
+						<content>
+							<table:TreeTable columnHeaderVisible="false" editable="false" enableSelectAll="false" selectionBehavior="RowOnly" selectionMode="Single" visibleRowCountMode="Auto" />
+						</content>
+						<footer>
+							<Toolbar>
+								<Label text="Filter:" />
+								<ComboBox />
+							</Toolbar>
+						</footer>
+					</Page>
+				</masterPages>
+				<detailPages>
+					<Page showHeader="false">
+						<content>
+							<TabContainer id="myTabContainer"
+									class="sapUiResponsiveContentPadding"
+									itemClose="tabCloseHandler">
+								<items >
+									<TabContainerItem name="Canvas_1">
+										<content>
+											
+										</content>
+									</TabContainerItem>
+									<TabContainerItem name="Editor 1">
+										<content>
+											
+										</content>
+									</TabContainerItem>
+								</items>
+							</TabContainer>
+						</content>
+					</Page>
+				</detailPages>
+			</SplitApp>
+		</layout:flexContent>
+	</layout:FixFlex>
 </mvc:View>
