@@ -6,17 +6,17 @@ sap.ui.define([
 
     var bLoading = false;
 
-    var RootListBinding = JSONListBinding.extend("root.data.ListBinding", {
+    var RootListBinding = JSONListBinding.extend("root.model.ListBinding", {
 
         // called by the TreeTable to know the amount of entries
         getLength: function() {
-            Log.warning("root.data.ListBinding#getLength()");
-            return this.getModel().getProperty("/length");
+            Log.warning("root.model.ListBinding#getLength()");
+            return this.getModel().getProperty("/length") || 0;
         },
 
         // function is called by the TreeTable when requesting the data to display
         getNodes: function(iStartIndex, iLength, iThreshold) {
-            Log.warning("root.data.ListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ")");
+            Log.warning("root.model.ListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ")");
             var data = this.getModel().getProperty(this.getPath());
             var aNodes = [];
             if (!bLoading) {
@@ -36,7 +36,7 @@ sap.ui.define([
                         });
                     }
                 }
-                if (aNodes.length != Math.min(iLength, this.getLength())) {
+                if (aNodes.length != Math.min(iLength, this.getModel().getProperty("/length"))) {
                     bLoading = true;
                     this.getModel().loadEntries(iStartIndex, iLength, iThreshold).then(function() {
                         bLoading = false;
@@ -52,45 +52,45 @@ sap.ui.define([
         },
 
         getContextByIndex: function(iIndex) {
-            Log.warning("root.data.ListBinding#getContextByIndex(" + iIndex + ")");
+            Log.warning("root.model.ListBinding#getContextByIndex(" + iIndex + ")");
         },
 
         findNode: function() {
-            Log.warning("root.data.ListBinding#findNode()");
+            Log.warning("root.model.ListBinding#findNode()");
         },
     
         nodeHasChildren: function(oNode) {
-            Log.warning("root.data.ListBinding#nodeHasChildren(" + oNode.context.getPath() + ")");
+            Log.warning("root.model.ListBinding#nodeHasChildren(" + oNode.context.getPath() + ")");
             return oNode.type === "folder";
         },
     
         isExpanded: function(iIndex) {
-            Log.warning("root.data.ListBinding#isExpanded(" + iIndex + ")");
+            Log.warning("root.model.ListBinding#isExpanded(" + iIndex + ")");
             return this.getNodes(iIndex, 1)[0].nodeState.expanded;
         },
 
         expand: function(iIndex) {
-            Log.warning("root.data.ListBinding#expand(" + iIndex + ")");
+            Log.warning("root.model.ListBinding#expand(" + iIndex + ")");
         },
     
         collapse: function(iIndex) {
-            Log.warning("root.data.ListBinding#collapse(" + iIndex + ")");
+            Log.warning("root.model.ListBinding#collapse(" + iIndex + ")");
         },
     
         // called by the TreeTable when a node is expanded/collapsed
         toggleIndex: function(iIndex) {
-            Log.warning("root.data.ListBinding#toggleIndex(" + iIndex + ")");
+            Log.warning("root.model.ListBinding#toggleIndex(" + iIndex + ")");
             var oContext = this.getModel().getContext(this.getPath() + "/" + iIndex);
             oContext.getProperty().expanded = !oContext.getProperty().expanded;
             this.getModel().toggleNode(oContext.getProperty("index"));
         },
     
         getSelectedIndex: function() {
-            Log.warning("root.data.ListBinding#getSelectedIndex(" + JSON.stringify(arguments) + ")");
+            Log.warning("root.model.ListBinding#getSelectedIndex(" + JSON.stringify(arguments) + ")");
         },
     
         isIndexSelectable: function() {
-            Log.warning("root.data.ListBinding#isIndexSelectable(" + JSON.stringify(arguments) + ")");
+            Log.warning("root.model.ListBinding#isIndexSelectable(" + JSON.stringify(arguments) + ")");
         }
 
     });

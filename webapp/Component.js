@@ -2,7 +2,7 @@ sap.ui.define([
 	"sap/ui/core/UIComponent",
 	"sap/ui/Device",
 	"root/model/models",
-	"root/data/Model",
+	"root/model/Model",
 	"sap/m/routing/Router", // needed for packaging
 	"sap/ui/core/ComponentSupport" // needed for packaging
 ], function (UIComponent, Device, models, RootModel) {

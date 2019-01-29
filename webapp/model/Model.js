@@ -1,11 +1,11 @@
 sap.ui.define([
     "jquery.sap.global",
     "sap/ui/model/json/JSONModel",
-    "root/data/ListBinding"
+    "root/model/ListBinding"
 ], function(jQuery, JSONModel, ListBinding) {
 	"use strict";
 
-    var RootModel = JSONModel.extend("root.data.Model", {
+    var RootModel = JSONModel.extend("root.model.Model", {
 
         constructor: function(sBaseUrl) {
             JSONModel.apply(this);
