@@ -3,7 +3,8 @@
 		xmlns:layout="sap.ui.layout"
 		xmlns:table="sap.ui.table"
 		displayBlock="true"
-		xmlns="sap.m">
+		xmlns="sap.m"
+		xmlns:rd="root.data">
 	<layout:FixFlex>
 		<layout:fixContent>
 			<OverflowToolbar>
@@ -31,7 +32,20 @@
 							</OverflowToolbar>
 						</customHeader>
 						<content>
-							<table:TreeTable columnHeaderVisible="false" editable="false" enableSelectAll="false" selectionBehavior="RowOnly" selectionMode="Single" visibleRowCountMode="Auto" />
+							<!--table:TreeTable columnHeaderVisible="false" editable="false" enableSelectAll="false" selectionBehavior="RowOnly" selectionMode="Single" visibleRowCountMode="Auto" /-->
+							<rd:TreeTable
+								title="Resource Browser"
+								columnHeaderVisible="false"
+								editable="false"
+								enableSelectAll="false"
+								selectionBehavior="RowOnly"
+								selectionMode="Single"
+								visibleRowCountMode="Auto"
+								rows="{/nodes}">
+								<rd:columns>
+									<table:Column label="Name" template="name"></table:Column>
+								</rd:columns>
+							</rd:TreeTable>
 						</content>
 						<footer>
 							<Toolbar>

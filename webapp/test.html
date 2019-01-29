@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<title>Dynamic TreeTable</title>
+
+<script>
+    window["sap-ui-config"] = {
+        "async": true,
+        "theme": "sap_belize",
+        "resourceroots": {
+            "root": "./"
+        },
+        "libs": "sap.m,sap.ui.table",
+        "xx-supportedLanguages": "en",
+        "xx-bindingSyntax": "complex",
+        "oninit": "onInit"
+    };
+</script>
+<script id="sap-ui-bootstrap" src="resources/ui5loader.js"></script>
+<script src="resources/ui5loader-autoconfig.js"></script>
+
+<script>
+
+    function onInit() {
+
+        sap.ui.require([
+            "sap/m/App", "sap/m/Page", "sap/ui/model/json/JSONModel",
+            "sap/ui/table/TreeTable", "sap/ui/table/Column",
+            "sap/m/Label", "sap/m/Text"
+        ], function(App, Page, JSONModel, TreeTable, Column, Label, Text) {
+
+            var oData = [
+                {
+                    text: "Node0",
+                    nodes: [
+                        {
+                            text: "Node0-1"
+                        }
+                    ],
+                    loaded: true
+                },
+                {
+                    text: "Node1",
+                    nodes: [
+                        {
+                            text: "Node1-1",
+                            nodes: [
+                                {
+                                    text: "Loading...",
+                                    dummy: true
+                                }
+                            ]
+                        }
+                    ],
+                    loaded: true
+                }
+            ];
+
+            function loadData(oTable, sPath) {
+                oTable.setBusy(true);
+                setTimeout(function() {
+                    var aNewNodes = [
+                        {
+                            text: "xyz"
+                        },
+                        {
+                            text: "abc",
+                            nodes: [
+                                {
+                                    text: "",
+                                    dummy: true
+                                }
+                            ]
+                        }
+                    ];
+                    oTable.getModel().setProperty(sPath + "/nodes", aNewNodes);
+                    oTable.setBusy(false);
+                }, 2000);
+            }
+
+
+            /*
+
+
+            * Folder
+              * 01.rrs
+              * 02.rrs
+              * 
+              * 
+              * 
+              * 
+              * 
+              * 
+              * 1000000.rrs
+
+
+            Dynamic Loading of Nodes
+            Paging inside Nodes (when too large)
+
+            Data is considered as static (otherwise an event to reload will be send to the client)
+               Push notificiation on data change!
+
+
+            */
+
+
+            var oTreeTable = new sap.ui.table.TreeTable({
+                visibleRowCountMode: "Auto",
+                columns: [
+                    new Column({
+                        label: new Label({
+                            text: "Label"
+                        }),
+                        template: new Text({
+                            text: "{text}",
+                            wrapping: false
+                        })
+                    })
+                ],
+                rows: {
+                    path: "/",
+                    parameters: {
+                        numberOfExpandedLevels: 1
+                    }
+                },
+                toggleOpenState: function(oEvent) {
+                    if (oEvent.getParameter("expanded")) {
+                        var oContext = oEvent.getParameter("rowContext");
+                        var sPath = oContext.getPath();
+                        var aNodes = oModel.getProperty("nodes", oContext);
+                        if (aNodes && aNodes.length == 1 && aNodes[0].dummy) {
+                            loadData(oEvent.getSource(), sPath);
+                        }
+                    }
+                }
+            });
+
+            var oModel = new JSONModel();
+            oTreeTable.setModel(oModel);
+            oModel.setData(oData);
+
+            var oApp = new App({
+                pages: [
+                    new Page({
+                        title : "TreeTable with lazy loading JSON",
+                        content : [oTreeTable]
+                    })
+                ]
+            });
+            oApp.placeAt("body");
+
+        });
+
+    }
+
+    sap.ui.require(["sap/ui/core/Core"], function(Core) {
+        Core.boot();
+    });
+
+</script>
+</head>
+<body id="body" class="sapUiBody">
+</body>
+</html>

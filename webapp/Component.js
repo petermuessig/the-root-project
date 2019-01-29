@@ -2,9 +2,10 @@ sap.ui.define([
 	"sap/ui/core/UIComponent",
 	"sap/ui/Device",
 	"root/model/models",
-	"sap/m/routing/Router",
-	"sap/ui/core/ComponentSupport"
-], function (UIComponent, Device, models) {
+	"root/data/Model",
+	"sap/m/routing/Router", // needed for packaging
+	"sap/ui/core/ComponentSupport" // needed for packaging
+], function (UIComponent, Device, models, RootModel) {
 	"use strict";
 
 	return UIComponent.extend("root.Component", {
@@ -27,6 +28,10 @@ sap.ui.define([
 
 			// set the device model
 			this.setModel(models.createDeviceModel(), "device");
+
+			// create and set the RootModel
+			this.setModel(new RootModel("/data"));
+
 		}
 	});
 });
