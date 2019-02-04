@@ -3,9 +3,10 @@ sap.ui.define([
 	"sap/ui/Device",
 	"root/model/models",
 	"root/model/Model",
+   "root/model/hModel",
 	"sap/m/routing/Router", // needed for packaging
 	"sap/ui/core/ComponentSupport" // needed for packaging
-], function (UIComponent, Device, models, RootModel) {
+], function (UIComponent, Device, models, RootModel, hRootModel) {
 	"use strict";
 
 	return UIComponent.extend("root.Component", {
@@ -29,8 +30,11 @@ sap.ui.define([
 			// set the device model
 			this.setModel(models.createDeviceModel(), "device");
 
-			// create and set the RootModel
-			this.setModel(new RootModel("/data"));
+			// old RootModel with flat list on server side
+			// this.setModel(new RootModel("/data"));
+			
+			// this is new model, flat list produced on client side
+			this.setModel(new hRootModel("/data"));
 
 		}
 	});
