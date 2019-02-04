@@ -13,6 +13,18 @@ sap.ui.define([
             this.setProperty("/", {
                 nodes: {}
             });
+            
+            // this is hierarchy, created on the client side and used for creation of flat list 
+            this.h = {
+               _name: "ROOT",
+               _childs: [],
+               _expanded: true
+            };
+        },
+        
+        getLength: function() {
+            var res = this.getProperty("/length"); 
+            return res || 0;
         },
 
         bindTree: function(sPath, oContext, aFilters, mParameters, aSorters) {
