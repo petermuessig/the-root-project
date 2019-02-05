@@ -23,8 +23,6 @@ sap.ui.define([
                 for (var i = iStartIndex, l = iStartIndex + iLength; i < l; i++) {
                     var oNode = data[i];
                     if (oNode) {
-                       console.log(this.getPath() + "/" + i," context ", this.getModel().getContext(this.getPath() + "/" + i));
-                       
                         aNodes.push({
                             context: this.getModel().getContext(this.getPath() + "/" + i),
                             type: oNode.type,

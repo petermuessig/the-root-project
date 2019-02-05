@@ -49,7 +49,7 @@ sap.ui.define([
               var name = names.shift(), find = false;
               if (!name) continue;
               
-              for (var k=0;k<curr._childs;++k) {
+              for (var k=0;k<curr._childs.length;++k) {
                  if (curr._childs[k]._name == name) {
                     curr = curr._childs[k];
                     find = true; 
@@ -65,14 +65,20 @@ sap.ui.define([
         processResponse: function(path, rnodes) {
            var elem = this.getNodeByPath(path);
            
-           if (!elem) { console.eror('DID NOT FOUND ' + path); return; }
-           
-           console.log('path', path, "get nodes", rnodes);
+           if (!elem) { console.error('DID NOT FOUND ' + path); return; }
            
            elem._childs = rnodes;
 
            if (this.buildFlatNodes() > 0)
               if (this.oBinding) this.oBinding.checkUpdate(true);
+        },
+        
+        // return element of hierarchical structure by TreeTable index 
+        getElementByIndex: function(indx) {
+           var data = this.getProperty("/"),
+               node = data.nodes[indx];
+           
+           return node ? node._elem : null;
         },
         
         // central method to create list of flat nodes using also selection when provided
@@ -91,13 +97,15 @@ sap.ui.define([
            }
            
            function scan(lvl, elem, path) {
-              path = !path ? "/" : path + "/" + elem._name;
+              // path = !path ? "/" : path + "/" + elem._name;
 
               if (build_nodes) 
                  data.nodes[id] = {
                     name: elem._name,
                     level: lvl,
                     index: id,
+                    _elem: elem,
+                    // these are fully optional, one can use element itself
                     type: elem.type,
                     isLeaf: elem.type === "file",
                     expanded: !!elem._expanded
@@ -113,19 +121,18 @@ sap.ui.define([
               }
               
               for (var k=0;k<elem._childs.length;++k)
-                 scan(lvl+1, elem._childs[k], path);
+                 scan(lvl+1, elem._childs[k], path + elem._childs[k]._name + "/");
            }
            
-           scan(0, this.h, "");
+           scan(0, this.h, "/");
            
            if (!req.length) {
               if (build_nodes) {
                  data.length = id;
                  this.setProperty("/", data);
               } else {
-                 this.setProperty("/length", id); // update length property
+                 this.setProperty("/length", id); // update only length property
               }
-              console.log('PRODUCE ITEMS len', id);
               return id;
            }
 
@@ -157,121 +164,25 @@ sap.ui.define([
            return 0;
         },
 
-        loadEntries: function(start, end, threshold) {
-
-            return new Promise(function(resolve, reject) {
-
-                var sType = "loadEntries";
-                var sUrl = this._sBaseUrl + "?top=" + start + "&length=" + threshold; //end;
-                var sMethod = "GET";
-                
-                jQuery.ajax({
-                    url: sUrl,
-                    dataType: "json",
-                    method: sMethod
-                }).done(function(responseData, textStatus, jqXHR) {
-
-                    // update the model with the new data
-                    var data = this.getProperty("/");
-                    data.length = responseData.length || 0;
-                    responseData.nodes.forEach(function(node, index, arr) {
-                        data.nodes[node.index] = node
-                    });
-                    this.setProperty("/", data);
-                    
-                    // notify the listeners that the nodes has been loaded properly
-                    this.fireRequestCompleted({
-                        type: sType, url : sUrl, method : sMethod, success: true
-                    });
-                    
-                    // resolve the Promise
-                    resolve(data);
-                    
-                }.bind(this)).fail(function(jqXHR, textStatus, errorThrown) {
-                    
-                    // log the error for debugging to see the issue when checking the log
-                    jQuery.sap.log.error("Failed to read data! Reason: " + errorThrown);
-                    
-                    // update the model with and empty list of nodes
-                    var data = this.getProperty("/");
-                    data.length = 0;
-                    data.nodes = {};
-                    this.setProperty("/", data);
-                    
-                    // notify the listeners that the request failed and no nodes could be loaded
-                    this.fireRequestCompleted({
-                        type: sType, url : sUrl, method : sMethod,success: false, error: errorThrown
-                    });
-                    this.fireRequestFailed(errorThrown);
-                    
-                    // reject the Promise
-                    reject(errorThrown);
-                    
-                }.bind(this));
-                
-                // notify the listeners that a request has been sent 
-                this.fireRequestSent({
-                    type: sType, url : sUrl, method : sMethod
-                });
-
-            }.bind(this));
-
-        },
-
         toggleNode: function(index) {
-
-            return new Promise(function(resolve, reject) {
-
-                var sType = "toggleNode";
-                var sUrl = this._sBaseUrl + "?toggle=" + index; //end;
-                var sMethod = "GET";
-                
-                jQuery.ajax({
-                    url: sUrl,
-                    dataType: "json",
-                    method: sMethod
-                }).done(function(responseData, textStatus, jqXHR) {
-
-                    // update the model with the new data
-                    var data = this.getProperty("/");
-                    data.length = responseData.length || 0;
-                    data.nodes = {};
-                    responseData.nodes.forEach(function(node, index, arr) {
-                        data.nodes[node.index] = node;
-                    });
-                    this.setProperty("/", data);
-                    
-                    // notify the listeners that the nodes has been loaded properly
-                    this.fireRequestCompleted({
-                        type: sType, url : sUrl, method : sMethod, success: true
-                    });
-                    
-                    // resolve the Promise
-                    resolve(data);
-                    
-                }.bind(this)).fail(function(jqXHR, textStatus, errorThrown) {
-                    
-                    // log the error for debugging to see the issue when checking the log
-                    jQuery.sap.log.error("Failed to read data! Reason: " + errorThrown);
-                    
-                    // notify the listeners that the request failed and no nodes could be loaded
-                    this.fireRequestCompleted({
-                        type: sType, url : sUrl, method : sMethod,success: false, error: errorThrown
-                    });
-                    this.fireRequestFailed(errorThrown);
-                    
-                    // reject the Promise
-                    reject(errorThrown);
-                    
-                }.bind(this));
-                
-                // notify the listeners that a request has been sent 
-                this.fireRequestSent({
-                    type: sType, url : sUrl, method : sMethod
-                });
-
-            }.bind(this));
-
+           
+           var elem = this.getElementByIndex(index);
+           if (!elem) return;
+           
+           console.log('Toggle element', elem._name)
+           
+           if (elem._expanded) {
+              delete elem._expanded;
+              delete elem._childs;
+           } else if (elem.type === "folder") {
+              elem._expanded = true; 
+           } else {
+              // nothing to do
+              return;
+           }
+           
+           if (this.buildFlatNodes() > 0)
+              if (this.oBinding) this.oBinding.checkUpdate(true);
         }
 
     });

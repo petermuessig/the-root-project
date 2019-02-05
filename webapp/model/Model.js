@@ -38,7 +38,6 @@ sap.ui.define([
                     var data = this.getProperty("/");
                     data.length = responseData.length || 0;
                     responseData.nodes.forEach(function(node, index, arr) {
-                       console.log('assign node', node.index, node.name)
                         data.nodes[node.index] = node
                     });
                     this.setProperty("/", data);

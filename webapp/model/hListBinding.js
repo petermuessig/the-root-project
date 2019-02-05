@@ -32,7 +32,7 @@ sap.ui.define([
                      aNodes.push({
                          context: this.getModel().getContext(this.getPath() + "/" + i),
                          type: oNode.type,
-                         isLeaf:  oNode.type === "file",
+                         isLeaf: oNode.type === "file",
                          level: oNode.level,
                          nodeState: {
                              expanded: oNode.expanded,
@@ -57,13 +57,20 @@ sap.ui.define([
         },
     
         nodeHasChildren: function(oNode) {
-            Log.warning("root.model.hListBinding#nodeHasChildren(" + oNode.context.getPath() + ")");
+            Log.warning("root.model.hListBinding#nodeHasChildren(" + oNode.type + ")");
             return oNode.type === "folder";
         },
     
         isExpanded: function(iIndex) {
             Log.warning("root.model.hListBinding#isExpanded(" + iIndex + ")");
-            return this.getNodes(iIndex, 1)[0].nodeState.expanded;
+            
+            var elem = this.getModel().getElementByIndex(iIndex);
+            
+            var res = elem ? !!elem._expanded : false;
+            
+            Log.warning("root.model.hListBinding#isExpanded(" + iIndex + ") res = " + res);
+            
+            return elem ? !!elem._expanded : false;
         },
 
         expand: function(iIndex) {
@@ -77,9 +84,7 @@ sap.ui.define([
         // called by the TreeTable when a node is expanded/collapsed
         toggleIndex: function(iIndex) {
             Log.warning("root.model.hListBinding#toggleIndex(" + iIndex + ")");
-            var oContext = this.getModel().getContext(this.getPath() + "/" + iIndex);
-            oContext.getProperty().expanded = !oContext.getProperty().expanded;
-            this.getModel().toggleNode(oContext.getProperty("index"));
+            this.getModel().toggleNode(iIndex);
         },
     
         getSelectedIndex: function() {
