@@ -22,6 +22,9 @@ sap.ui.define([
             };
             
             this.loadDataCounter = 0; // counter of number of nodes
+            
+            // after shifts are assigned, one can jump over subfolders much faster
+            this.assignShifts = true; 
         },
         
         bindTree: function(sPath, oContext, aFilters, mParameters, aSorters) {
@@ -87,7 +90,7 @@ sap.ui.define([
 
            if (this.loadDataCounter > 0) return -1; // do not update until all requests are processed
 
-           var id = 0, req = []; // current id, at the same time number of items
+           var id = 0, req = [], assign_shifts = this.assignShifts; // current id, at the same time number of items
            
            var nodes = args ? this.getProperty("/nodes") : null;
            
@@ -110,21 +113,32 @@ sap.ui.define([
                  };
               
               id++;
+
+              var before_id = id;
               
-              if (!elem._expanded) return;
-              
-              if (elem._childs === undefined) {
-                 req.push(path);
-                 return;
+              if (elem._expanded) {
+                 if (elem._childs === undefined) {
+                    req.push(path); // add new request
+                 } else {
+
+                    // check if scan is required
+                    if (!assign_shifts && args && (((id + elem._shift) < args.begin) || (id >= args.threshold))) {
+                       id += elem._shift;
+                       return;
+                    }
+
+                    for (var k=0;k<elem._childs.length;++k)
+                       scan(lvl+1, elem._childs[k], path + elem._childs[k]._name + "/");
+                 }
               }
               
-              for (var k=0;k<elem._childs.length;++k)
-                 scan(lvl+1, elem._childs[k], path + elem._childs[k]._name + "/");
+              if (assign_shifts) elem._shift = id - before_id;  
            }
            
            scan(0, this.h, "/");
            
            if (!req.length) {
+              delete this.assignShifts; // shifts can be assigned once
               this.setProperty("/length", id); // update length property
               if (nodes !== null) {
                  this.setProperty("/nodes", nodes); 
@@ -173,8 +187,10 @@ sap.ui.define([
            if (elem._expanded) {
               delete elem._expanded;
               delete elem._childs;
+              elem._shift = 0; // no expanded childs - no extra if=d shift, rest remain as is  
            } else if (elem.type === "folder") {
               elem._expanded = true; 
+              this.assignShifts = true; // recheck shifts for all nodes 
            } else {
               // nothing to do
               return;
