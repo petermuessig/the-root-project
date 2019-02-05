@@ -30,13 +30,15 @@ sap.ui.define([
                  var oNode = data[i];
                  if (oNode) {
                      aNodes.push({
-                         context: this.getModel().getContext(this.getPath() + "/" + i),
                          type: oNode.type,
                          isLeaf: oNode.type === "file",
                          level: oNode.level,
-                         nodeState: {
-                             expanded: oNode.expanded,
-                             selected: oNode.selected,
+                         
+                         // QUESTION: seems to be, this is required by JSONListBinding?
+                         context: this.getModel().getContext(this.getPath() + "/" + i),
+                         nodeState: {  
+                             expanded: !!oNode._elem._expanded, 
+                             selected: !!oNode._elem._selected,
                              sum: false
                          } 
                      });
@@ -62,15 +64,12 @@ sap.ui.define([
         },
     
         isExpanded: function(iIndex) {
-            Log.warning("root.model.hListBinding#isExpanded(" + iIndex + ")");
-            
             var elem = this.getModel().getElementByIndex(iIndex);
-            
             var res = elem ? !!elem._expanded : false;
             
             Log.warning("root.model.hListBinding#isExpanded(" + iIndex + ") res = " + res);
             
-            return elem ? !!elem._expanded : false;
+            return res;
         },
 
         expand: function(iIndex) {

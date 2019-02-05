@@ -97,8 +97,6 @@ sap.ui.define([
            }
            
            function scan(lvl, elem, path) {
-              // path = !path ? "/" : path + "/" + elem._name;
-
               if (build_nodes) 
                  data.nodes[id] = {
                     name: elem._name,
