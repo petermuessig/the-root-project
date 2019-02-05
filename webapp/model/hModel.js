@@ -93,8 +93,7 @@ sap.ui.define([
            function scan(lvl, elem, path) {
               path = !path ? "/" : path + "/" + elem._name;
 
-              if (build_nodes) {
-                 console.log('produce entry',id, lvl, elem._name);
+              if (build_nodes) 
                  data.nodes[id] = {
                     name: elem._name,
                     level: lvl,
@@ -103,7 +102,6 @@ sap.ui.define([
                     isLeaf: elem.type === "file",
                     expanded: !!elem._expanded
                  }
-              }
               
               id++;
               
@@ -157,40 +155,6 @@ sap.ui.define([
 
            // do not return valid number of elements
            return 0;
-        },
-        
-        getNodes: function(iStartIndex, iLength, iThreshold) {
-           // loading not completed
-           var beg = iStartIndex || 0;
-           var end = beg + (iLength || 100); 
-
-           var nodes = [];
-           
-           if (this.buildFlatNodes(true) > 0) {
-              var data = this.getProperty("/nodes");
-              
-              for (var i = beg; i < end; i++) {
-                 var oNode = data[i];
-                 if (oNode) {
-                    console.log("/nodes/" + i," context ", this.getContext("/nodes/" + i));
-                    
-                     nodes.push({
-                         context: this.getContext("/nodes/" + i),
-                         type: oNode.type,
-                         isLeaf:  oNode.type === "file",
-                         level: oNode.level,
-                         nodeState: {
-                             expanded: oNode.expanded,
-                             selected: oNode.selected,
-                             sum: false
-                         } 
-                     });
-                 }
-             }
-
-           }
-           
-           return nodes;
         },
 
         loadEntries: function(start, end, threshold) {

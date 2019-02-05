@@ -19,11 +19,32 @@ sap.ui.define([
 
            Log.warning("root.model.hListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ")");
 
-           var res = this.getModel().getNodes(iStartIndex, iLength, iThreshold);
+           var aNodes = [];
            
-           Log.warning("root.model.hListBinding#getNodes(res.length = " + res.length + ")");
+           var totalLen = this.getModel().buildFlatNodes(true);
+           if (totalLen > 0) {
+              var beg = iStartIndex || 0;
+              var end = Math.min(beg + (iLength || 100), totalLen);
+              var data = this.getModel().getProperty(this.getPath());
+              for (var i = beg; i < end; i++) {
+                 var oNode = data[i];
+                 if (oNode) {
+                     aNodes.push({
+                         context: this.getModel().getContext(this.getPath() + "/" + i),
+                         type: oNode.type,
+                         isLeaf:  oNode.type === "file",
+                         level: oNode.level,
+                         nodeState: {
+                             expanded: oNode.expanded,
+                             selected: oNode.selected,
+                             sum: false
+                         } 
+                     });
+                 }
+              }
+           }
            
-           return res;
+           return aNodes;
            
         },
 
