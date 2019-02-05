@@ -19,15 +19,18 @@ sap.ui.define([
 
            Log.warning("root.model.hListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ")");
 
+           var args = {
+              begin: iStartIndex,
+              end: iStartIndex + iLength,
+              threshold: Math.max(iStartIndex + iThreshold, iStartIndex + iLength) 
+           };
+           
            var aNodes = [];
            
-           var totalLen = this.getModel().buildFlatNodes(true);
+           var totalLen = this.getModel().buildFlatNodes(args);
            if (totalLen > 0) {
-              var beg = iStartIndex || 0;
-              var end = Math.min(beg + (iLength || 100), totalLen);
-              var data = this.getModel().getProperty(this.getPath());
-              for (var i = beg; i < end; i++) {
-                 var oNode = data[i];
+              for (var i = args.begin; i < args.end; i++) {
+                 var oNode = args.nodes[i];
                  if (oNode) {
                      aNodes.push({
                          type: oNode.type,

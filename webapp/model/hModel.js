@@ -69,7 +69,7 @@ sap.ui.define([
            
            elem._childs = rnodes;
 
-           if (this.buildFlatNodes() > 0)
+           if (this.buildFlatNodes() >= 0)
               if (this.oBinding) this.oBinding.checkUpdate(true);
         },
         
@@ -82,32 +82,32 @@ sap.ui.define([
         },
         
         // central method to create list of flat nodes using also selection when provided
-        buildFlatNodes: function(build_nodes) {
+        // returns -1 if there are running requests otherwise returns total number of items
+        buildFlatNodes: function(args) {
 
-           if (this.loadDataCounter > 0) return 0; // do not update until all requests are processed
+           if (this.loadDataCounter > 0) return -1; // do not update until all requests are processed
 
            var id = 0, req = []; // current id, at the same time number of items
            
-           var data = null;
+           var nodes = args ? this.getProperty("/nodes") : null;
            
-           if (build_nodes) {
-              data = this.getProperty("/");
-              data.nodes = {};
-              data.length = 0;
-           }
+           if ((nodes!==null) && this.reset_nodes) nodes = {};
            
+           // main method to scan through all existing sub-folders
            function scan(lvl, elem, path) {
-              if (build_nodes) 
-                 data.nodes[id] = {
+              
+              if ((nodes !== null) && (id >= args.begin) && (id < args.threshold) && !nodes[id]) 
+                 nodes[id] = {
                     name: elem._name,
                     level: lvl,
                     index: id,
                     _elem: elem,
-                    // these are fully optional, one can use element itself
+                    
+                    // these are optional, should be eliminated in the future
                     type: elem.type,
                     isLeaf: elem.type === "file",
                     expanded: !!elem._expanded
-                 }
+                 };
               
               id++;
               
@@ -125,11 +125,11 @@ sap.ui.define([
            scan(0, this.h, "/");
            
            if (!req.length) {
-              if (build_nodes) {
-                 data.length = id;
-                 this.setProperty("/", data);
-              } else {
-                 this.setProperty("/length", id); // update only length property
+              this.setProperty("/length", id); // update length property
+              if (nodes !== null) {
+                 this.setProperty("/nodes", nodes); 
+                 args.nodes = nodes; // return back values required to
+                 delete this.reset_nodes; // build complete
               }
               return id;
            }
@@ -138,6 +138,7 @@ sap.ui.define([
            for (var n=0;n<req.length;++n) {
               this.loadDataCounter++;
 
+              // TODO: here is just HTTP request, in ROOT we will use websocket to send requests and process replies 
               jQuery.ajax({
                  url: this._sBaseUrl + "?path=" + req[n],
                  dataType: "json",
@@ -158,8 +159,8 @@ sap.ui.define([
              }.bind(this, req[n]));
            }
 
-           // do not return valid number of elements
-           return 0;
+           // do not return valid number of elements - requests not yet processed
+           return -1;
         },
 
         toggleNode: function(index) {
@@ -179,7 +180,10 @@ sap.ui.define([
               return;
            }
            
-           if (this.buildFlatNodes() > 0)
+           // for now - reset all existing nodes and rebuild from the beginning
+           this.reset_nodes = true;
+           
+           if (this.buildFlatNodes() >= 0)
               if (this.oBinding) this.oBinding.checkUpdate(true);
         }
 
