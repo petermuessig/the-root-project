@@ -16,42 +16,15 @@ sap.ui.define([
 
         // function is called by the TreeTable when requesting the data to display
         getNodes: function(iStartIndex, iLength, iThreshold) {
-            Log.warning("root.model.hListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ")");
-            var data = this.getModel().getProperty(this.getPath());
-            var aNodes = [];
-            if (!bLoading) {
-                for (var i = iStartIndex, l = iStartIndex + iLength; i < l; i++) {
-                    var oNode = data[i];
-                    if (oNode) {
-                        aNodes.push({
-                            context: this.getModel().getContext(this.getPath() + "/" + i),
-                            type: oNode.type,
-                            isLeaf:  oNode.type === "file",
-                            level: oNode.level,
-                            nodeState: {
-                                expanded: oNode.expanded,
-                                selected: oNode.selected,
-                                sum: false
-                            } 
-                        });
-                    }
-                }
-                if (aNodes.length != Math.min(iLength, this.getModel().getProperty("/length"))) {
-                    bLoading = true;
-                    this.getModel().loadEntries(iStartIndex, iLength, iThreshold).then(function() {
-                        bLoading = false;
-                        this.checkUpdate(true); // force update
-                    }.bind(this), function() {
-                        bLoading = false;
-                        this.checkUpdate(true); // force update
-                    }.bind(this));
-                    return [];
-                }
-            }
-            
-            if (aNodes.length > 0) console.log('!!!! RETURN ', aNodes.length);
-            
-            return aNodes;
+
+           Log.warning("root.model.hListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ")");
+
+           var res = this.getModel().getNodes(iStartIndex, iLength, iThreshold);
+           
+           Log.warning("root.model.hListBinding#getNodes(res.length = " + res.length + ")");
+           
+           return res;
+           
         },
 
         getContextByIndex: function(iIndex) {

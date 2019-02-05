@@ -34,7 +34,7 @@ sap.ui.define([
 			// this.setModel(new RootModel("/data"));
 			
 			// this is new model, flat list produced on client side
-			this.setModel(new hRootModel("/data"));
+			this.setModel(new hRootModel("/hierarchy"));
 
 		}
 	});

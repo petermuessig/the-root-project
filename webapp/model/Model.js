@@ -38,14 +38,15 @@ sap.ui.define([
                     var data = this.getProperty("/");
                     data.length = responseData.length || 0;
                     responseData.nodes.forEach(function(node, index, arr) {
+                       console.log('assign node', node.index, node.name)
                         data.nodes[node.index] = node
                     });
                     this.setProperty("/", data);
                     
                     // notify the listeners that the nodes has been loaded properly
-                    this.fireRequestCompleted({
-                        type: sType, url : sUrl, method : sMethod, success: true
-                    });
+                    //this.fireRequestCompleted({
+                    //    type: sType, url : sUrl, method : sMethod, success: true
+                    //});
                     
                     // resolve the Promise
                     resolve(data);
@@ -73,9 +74,9 @@ sap.ui.define([
                 }.bind(this));
                 
                 // notify the listeners that a request has been sent 
-                this.fireRequestSent({
-                    type: sType, url : sUrl, method : sMethod
-                });
+                //this.fireRequestSent({
+                //    type: sType, url : sUrl, method : sMethod
+                //});
 
             }.bind(this));
 
