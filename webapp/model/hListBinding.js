@@ -44,27 +44,13 @@ sap.ui.define([
                     } 
                  });
               } else {
-                 aNodes.push({
-                    type: "file",
-                    isLeaf: true,
-                    level: 1,
-
-                    // QUESTION: seems to be, this is required by JSONListBinding?
-                    context: this.getModel().getContext(this.getPath() + "/" + i),
-                    nodeState: {  
-                       expanded: false, 
-                       selected: false,
-                       sum: false
-                    } 
-                 });
-
+                 aNodes.push(null); // dummy entry
               }
            }
 
            Log.warning("root.model.hListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ") res = " + aNodes.length);
            
            return aNodes;
-           
         },
 
         getContextByIndex: function(iIndex) {
@@ -85,7 +71,7 @@ sap.ui.define([
             var elem = this.getModel().getElementByIndex(iIndex);
             var res = elem ? !!elem._expanded : false;
             
-            Log.warning("root.model.hListBinding#isExpanded(" + iIndex + ") res = " + res);
+            Log.warning("root.model.hListBinding#isExpanded(" + iIndex + ") res = " + res + "  iselem = " + (elem ? elem._name : "---"));
             
             return res;
         },
