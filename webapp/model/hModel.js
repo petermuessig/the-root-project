@@ -27,7 +27,7 @@ sap.ui.define([
             this.threshold = 100; // default threshold to prefetch items
             
             // submit top-level request already when construct model
-            this.submitRequest("/");
+            this.submitRequest(this.h, "/");
         },
         
         bindTree: function(sPath, oContext, aFilters, mParameters, aSorters) {
@@ -64,7 +64,11 @@ sap.ui.define([
         },
 
         // submit next request to the server 
-        submitRequest: function(path, first, number) {
+        submitRequest: function(elem, path, first, number) {
+           
+           if (elem._requested) return;
+           elem._requested = true;
+           
            this.loadDataCounter++;
            
            var request = "path=" + path;
@@ -97,6 +101,9 @@ sap.ui.define([
            
            if (!elem) { console.error('DID NOT FOUND ' + reply.path); return; }
            
+           if (!elem._requested) console.error('ELEMENT WAS NOT REQUESTED!!!!', reply.path);
+           delete elem._requested;
+           
            var smart_merge = false;
            
            // TODO: one could merge items together to keep subfolder structures
@@ -117,9 +124,11 @@ sap.ui.define([
               elem._first = reply.first || 0;
            }
            
-           if (this.scanShifts() >= 0) {
-              if (this.oBinding) this.oBinding.checkUpdate(true);
-           }
+           this.scanShifts();
+           
+           if (this.loadDataCounter == 0)
+              if (this.oBinding) 
+                 this.oBinding.checkUpdate(true);
         },
         
         // return element of hierarchical structure by TreeTable index 
@@ -132,8 +141,6 @@ sap.ui.define([
         
         // function used to calculate all ids shifts and total number of elements
         scanShifts: function() {
-           
-           if (this.loadDataCounter > 0) return -1; // do not update until all requests are processed
            
            var id = 0;
            
@@ -176,14 +183,12 @@ sap.ui.define([
         // returns -1 if there are running requests otherwise returns total number of items
         buildFlatNodes: function(args) {
 
-           if (this.loadDataCounter > 0) return -1; // do not update until all requests are processed
-
            var pthis = this,
                id = 0,         // current id, at the same time number of items
                threshold = args.threshold || this.threshold || 100,
                threshold2 = Math.round(threshold/2); 
            
-           var nodes = this.reset_nodes ? {} : this.getProperty("/nodes");
+           var nodes = this.getProperty("/nodes");
            
            // main method to scan through all existing sub-folders
            function scan(lvl, elem, path) {
@@ -207,8 +212,8 @@ sap.ui.define([
                  
               if (elem._childs === undefined) {
                  // add new request - can we check if only special part of childs is required? 
-                   
-                 pthis.submitRequest(path);
+
+                 pthis.submitRequest(elem, path);
                  
                  id += elem._nchilds; // we know how many childs are
                  return;
@@ -229,7 +234,7 @@ sap.ui.define([
                     var first = Math.max(args.begin - id - threshold2, 0),
                         number = Math.min(elem._first - first, threshold);
                     
-                    pthis.submitRequest(path, first, number);
+                    pthis.submitRequest(elem, path, first, number);
                  }
 
                  id += elem._first;
@@ -254,7 +259,7 @@ sap.ui.define([
                        number = threshold;
                     }
                     
-                    pthis.submitRequest(path, first, number);
+                    pthis.submitRequest(elem, path, first, number);
                  }
 
                  id += _remains;
@@ -263,12 +268,9 @@ sap.ui.define([
            
            scan(0, this.h, "/");
 
-           if (this.loadDataCounter > 0) return -1; // do not update until all requests are processed
-
            this.setProperty("/length", id); // update length property
            this.setProperty("/nodes", nodes); 
            args.nodes = nodes; // return back values required to
-           delete this.reset_nodes; // build complete
 
            return id;
         },
@@ -291,11 +293,13 @@ sap.ui.define([
            }
            
            // for now - reset all existing nodes and rebuild from the beginning
-           this.reset_nodes = true;
+           // all nodes should be created from scratch
+           this.setProperty("/nodes", {}); 
            
-           if (this.scanShifts() >= 0) {
-              if (this.oBinding) this.oBinding.checkUpdate(true);
-           }
+           this.scanShifts();
+           
+           // no need to update - this should be invoked from openui anyway
+           //   if (this.oBinding) this.oBinding.checkUpdate(true);
         }
 
     });

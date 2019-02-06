@@ -17,38 +17,51 @@ sap.ui.define([
         // function is called by the TreeTable when requesting the data to display
         getNodes: function(iStartIndex, iLength, iThreshold) {
 
-           Log.warning("root.model.hListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ")");
-
            var args = {
               begin: iStartIndex,
               end: iStartIndex + iLength,
               threshold: iThreshold 
            };
            
-           var totalLen = this.getModel().buildFlatNodes(args);
+           this.getModel().buildFlatNodes(args);
            
            var aNodes = [];
            
-           if (totalLen > 0) {
-              for (var i = args.begin; i < args.end; i++) {
-                 var oNode = args.nodes[i];
-                 if (oNode) {
-                     aNodes.push({
-                         type: oNode.type,
-                         isLeaf: oNode.type === "file",
-                         level: oNode.level,
-                         
-                         // QUESTION: seems to be, this is required by JSONListBinding?
-                         context: this.getModel().getContext(this.getPath() + "/" + i),
-                         nodeState: {  
-                             expanded: !!oNode._elem._expanded, 
-                             selected: !!oNode._elem._selected,
-                             sum: false
-                         } 
-                     });
-                 }
+           for (var i = args.begin; i < args.end; i++) {
+              var oNode = args.nodes[i];
+              if (oNode) {
+                 aNodes.push({
+                    type: oNode.type,
+                    isLeaf: oNode.type === "file",
+                    level: oNode.level,
+
+                    // QUESTION: seems to be, this is required by JSONListBinding?
+                    context: this.getModel().getContext(this.getPath() + "/" + i),
+                    nodeState: {  
+                       expanded: !!oNode._elem._expanded, 
+                       selected: !!oNode._elem._selected,
+                       sum: false
+                    } 
+                 });
+              } else {
+                 aNodes.push({
+                    type: "file",
+                    isLeaf: true,
+                    level: 1,
+
+                    // QUESTION: seems to be, this is required by JSONListBinding?
+                    context: this.getModel().getContext(this.getPath() + "/" + i),
+                    nodeState: {  
+                       expanded: false, 
+                       selected: false,
+                       sum: false
+                    } 
+                 });
+
               }
            }
+
+           Log.warning("root.model.hListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ") res = " + aNodes.length);
            
            return aNodes;
            
@@ -56,6 +69,7 @@ sap.ui.define([
 
         getContextByIndex: function(iIndex) {
             Log.warning("root.model.hListBinding#getContextByIndex(" + iIndex + ")");
+            return this.getModel().getContext(this.getPath() + "/" + iIndex);
         },
 
         findNode: function() {
