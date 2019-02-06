@@ -12,10 +12,11 @@ sap.ui.define([
             JSONModel.apply(this);
             this._sBaseUrl = sBaseUrl;
             this.setProperty("/", {
-                nodes: {}
+                nodes: {}, // nodes shown in the TreeTable, should be flat list
+                length: 0  // total number of elements 
             });
             
-            // this is hierarchy, created on the client side and used for creation of flat list 
+            // this is true hierarchy, created on the client side and used for creation of flat list 
             this.h = {
                _name: "ROOT",
                _expanded: true
@@ -23,8 +24,10 @@ sap.ui.define([
             
             this.loadDataCounter = 0; // counter of number of nodes
             
-            // after shifts are assigned, one can jump over subfolders much faster
-            this.assignShifts = true; 
+            this.threshold = 100; // default threshold to prefetch items
+            
+            // submit top-level request already when construct model
+            this.submitRequest("/");
         },
         
         bindTree: function(sPath, oContext, aFilters, mParameters, aSorters) {
@@ -34,12 +37,7 @@ sap.ui.define([
         },
 
         getLength: function() {
-           
-           var res = this.getProperty("/length") || 0;
-           
-           if (!res) res = this.buildFlatNodes();
-           
-           return res;
+           return this.getProperty("/length");
         },
         
         getNodeByPath: function(path) {
@@ -63,6 +61,35 @@ sap.ui.define([
               if (!find) return null;
            }
            return curr;
+        },
+
+        // submit next request to the server 
+        submitRequest: function(path, first, number) {
+           this.loadDataCounter++;
+           
+           var request = "path=" + path;
+           if ((first !== undefined) && (number !== undefined))
+              request += "&first=" + first + "&number=" + number;
+
+           // TODO: here is just HTTP request, in ROOT we will use websocket to send requests and process replies 
+           jQuery.ajax({
+              url: this._sBaseUrl + "?" + request,
+              dataType: "json",
+              method: "GET"
+          }).done(function(responseData, textStatus, jqXHR) {
+
+             this.loadDataCounter--;
+             
+             this.processResponse(responseData);
+              
+          }.bind(this)).fail(function(rpath, jqXHR, textStatus, errorThrown) {
+              
+             this.loadDataCounter--;
+             
+             // log the error for debugging to see the issue when checking the log
+             jQuery.sap.log.error("Failed to read data for " + rpath + "! Reason: " + errorThrown);
+              
+          }.bind(this, request));
         },
         
         processResponse: function(reply) {
@@ -89,9 +116,10 @@ sap.ui.define([
               elem._childs = reply.nodes;
               elem._first = reply.first || 0;
            }
-
-           if (this.buildFlatNodes() >= 0)
+           
+           if (this.scanShifts() >= 0) {
               if (this.oBinding) this.oBinding.checkUpdate(true);
+           }
         },
         
         // return element of hierarchical structure by TreeTable index 
@@ -102,22 +130,65 @@ sap.ui.define([
            return node ? node._elem : null;
         },
         
+        // function used to calculate all ids shifts and total number of elements
+        scanShifts: function() {
+           
+           if (this.loadDataCounter > 0) return -1; // do not update until all requests are processed
+           
+           var id = 0;
+           
+           function scan(lvl, elem, path) {
+              
+              id++;
+
+              var before_id = id;
+              
+              if (elem._expanded) {
+                 if (elem._childs === undefined) {
+                    id += elem._nchilds || 0; // we know how many childs are, do not make request here
+                 } else {
+
+                    if (elem._first) 
+                       id += elem._first;
+
+                    for (var k=0;k<elem._childs.length;++k)
+                       scan(lvl+1, elem._childs[k], path + elem._childs[k]._name + "/");
+                    
+                    // check elements at the end
+                    var _last = (elem._first || 0) + elem._childs.length;
+                    var _remains = elem._nchilds  - _last;
+                    if (_remains > 0) id += _remains;
+                 }
+              }
+              
+              elem._shift = id - before_id;  
+           }
+
+           scan(0, this.h, "/");
+           
+           this.setProperty("/length", id);
+           
+           return id;
+        },
+        
+        
         // central method to create list of flat nodes using also selection when provided
         // returns -1 if there are running requests otherwise returns total number of items
         buildFlatNodes: function(args) {
 
            if (this.loadDataCounter > 0) return -1; // do not update until all requests are processed
 
-           var id = 0, requests = [], assign_shifts = this.assignShifts; // current id, at the same time number of items
+           var pthis = this,
+               id = 0,         // current id, at the same time number of items
+               threshold = args.threshold || this.threshold || 100,
+               threshold2 = Math.round(threshold/2); 
            
-           var nodes = args ? this.getProperty("/nodes") : null;
-           
-           if ((nodes!==null) && this.reset_nodes) nodes = {};
+           var nodes = this.reset_nodes ? {} : this.getProperty("/nodes");
            
            // main method to scan through all existing sub-folders
            function scan(lvl, elem, path) {
-              
-              if ((nodes !== null) && (id >= args.begin) && (id < args.threshold) && !nodes[id]) 
+              // create elements with safety margin
+              if ((nodes !== null) && !nodes[id] && (id >= args.begin - threshold2) && (id < args.end + threshold2) ) 
                  nodes[id] = {
                     name: elem._name,
                     level: lvl,
@@ -132,101 +203,74 @@ sap.ui.define([
               
               id++;
 
-              var before_id = id;
-              
-              if (elem._expanded) {
-                 if (elem._childs === undefined) {
-                    // add new request - can we check if only special part of childs is required? 
-                    
-                    requests.push("path=" + path); 
-                    
-                    id += elem._nchilds; // we know how many childs are
-                 } else {
+              if (!elem._expanded) return;
+                 
+              if (elem._childs === undefined) {
+                 // add new request - can we check if only special part of childs is required? 
+                   
+                 pthis.submitRequest(path);
+                 
+                 id += elem._nchilds; // we know how many childs are
+                 return;
+              } 
 
-                    // check if scan is required
-                    if (!assign_shifts && args && (((id + elem._shift) < args.begin) || (id >= args.threshold))) {
-                       id += elem._shift;
-                       return;
-                    }
-                    
-                    // when not all childs, but only part of them are available
-                    if (elem._first) {
-                       // check if special requests is needed
-                       if (!assign_shifts && args && (id < args.begin) && (id + elem._first >= args.begin)) {
-                          // we need to request several more items
-                          
-                          var first = Math.max(args.begin - id - 10, 0),
-                              number = Math.min(elem._first - first, 100);
-                          
-                          requests.push("path=" + path + "&first=" + first + "&number=" + number);
-                       }  
-                       
-                       id += elem._first;
-                    }
-
-                    for (var k=0;k<elem._childs.length;++k)
-                       scan(lvl+1, elem._childs[k], path + elem._childs[k]._name + "/");
-                    
-                    // check if more elements are required
-                    
-                    var _last = (elem._first || 0) + elem._childs.length;
-                    var remains = elem._nchilds  - _last;
-                    
-                    if (remains > 0) {
-                       if (!assign_shifts && args && (id < args.begin) && (id + remains >= args.begin)) {
-                          var first = Math.max(_last, _last + (args.begin-id) - 10),
-                              number = Math.min(elem._nchilds - first, 100);
-                          requests.push("path=" + path + "&first=" + first + "&number=" + number);
-                       }
-                       
-                       id += remains;
-                    } 
-                 }
+              // check if scan is required
+              if (((id + elem._shift) < args.begin - threshold2) || (id >= args.end + threshold2)) {
+                 id += elem._shift;
+                 return;
               }
-              
-              if (assign_shifts) elem._shift = id - before_id;  
+                    
+              // when not all childs from very beginning is loaded, but may be required
+              if (elem._first) {
+                       
+                 // check if requests are needed to load part in the begin of the list
+                 if (args.begin - id - threshold2 < elem._first) {
+
+                    var first = Math.max(args.begin - id - threshold2, 0),
+                        number = Math.min(elem._first - first, threshold);
+                    
+                    pthis.submitRequest(path, first, number);
+                 }
+
+                 id += elem._first;
+              }
+
+              for (var k=0;k<elem._childs.length;++k)
+                 scan(lvl+1, elem._childs[k], path + elem._childs[k]._name + "/");
+
+              // check if more elements are required
+
+              var _last = (elem._first || 0) + elem._childs.length;
+              var _remains = elem._nchilds  - _last;
+
+              if (_remains > 0) {
+                 if (args.end + threshold2 > id) {
+                    
+                    var first = _last, number = args.end + threshold2 - id;
+                    if (number < threshold) number = threshold; // always request much  
+                    if (number > _remains) number = _remains; // but not too much 
+                    if (number > threshold) {
+                       first += (number - threshold);
+                       number = threshold;
+                    }
+                    
+                    pthis.submitRequest(path, first, number);
+                 }
+
+                 id += _remains;
+              } 
            }
            
            scan(0, this.h, "/");
-           
-           if (!requests.length) {
-              delete this.assignShifts; // shifts can be assigned once
-              this.setProperty("/length", id); // update length property
-              if (nodes !== null) {
-                 this.setProperty("/nodes", nodes); 
-                 args.nodes = nodes; // return back values required to
-                 delete this.reset_nodes; // build complete
-              }
-              return id;
-           }
 
-           // submit new requests which are now needed
-           for (var n=0;n<requests.length;++n) {
-              this.loadDataCounter++;
+           if (this.loadDataCounter > 0) return -1; // do not update until all requests are processed
 
-              // TODO: here is just HTTP request, in ROOT we will use websocket to send requests and process replies 
-              jQuery.ajax({
-                 url: this._sBaseUrl + "?" + requests[n],
-                 dataType: "json",
-                 method: "GET"
-             }).done(function(responseData, textStatus, jqXHR) {
+           this.setProperty("/length", id); // update length property
+           this.setProperty("/nodes", nodes); 
+           args.nodes = nodes; // return back values required to
+           delete this.reset_nodes; // build complete
 
-                this.loadDataCounter--;
-                
-                this.processResponse(responseData);
-                 
-             }.bind(this)).fail(function(rpath, jqXHR, textStatus, errorThrown) {
-                 
-                this.loadDataCounter--;
-                
-                // log the error for debugging to see the issue when checking the log
-                jQuery.sap.log.error("Failed to read data for " + rpath + "! Reason: " + errorThrown);
-                 
-             }.bind(this, requests[n]));
-           }
-
-           // if specific range was configured, we should wait until request is processed
-           return args ? -1 : id;
+           return id;
         },
 
         toggleNode: function(index) {
@@ -239,10 +283,8 @@ sap.ui.define([
            if (elem._expanded) {
               delete elem._expanded;
               delete elem._childs;
-              elem._shift = 0; // no expanded childs - no extra if=d shift, rest remain as is  
            } else if (elem.type === "folder") {
               elem._expanded = true; 
-              this.assignShifts = true; // recheck shifts for all nodes 
            } else {
               // nothing to do
               return;
@@ -251,8 +293,9 @@ sap.ui.define([
            // for now - reset all existing nodes and rebuild from the beginning
            this.reset_nodes = true;
            
-           if (this.buildFlatNodes() >= 0)
+           if (this.scanShifts() >= 0) {
               if (this.oBinding) this.oBinding.checkUpdate(true);
+           }
         }
 
     });

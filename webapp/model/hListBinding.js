@@ -10,7 +10,7 @@ sap.ui.define([
 
         // called by the TreeTable to know the amount of entries
         getLength: function() {
-            Log.warning("root.model.hListBinding#getLength()");
+            // Log.warning("root.model.hListBinding#getLength()");
             return this.getModel().getLength();
         },
 
@@ -22,12 +22,13 @@ sap.ui.define([
            var args = {
               begin: iStartIndex,
               end: iStartIndex + iLength,
-              threshold: Math.max(iStartIndex + iThreshold, iStartIndex + iLength) 
+              threshold: iThreshold 
            };
+           
+           var totalLen = this.getModel().buildFlatNodes(args);
            
            var aNodes = [];
            
-           var totalLen = this.getModel().buildFlatNodes(args);
            if (totalLen > 0) {
               for (var i = args.begin; i < args.end; i++) {
                  var oNode = args.nodes[i];
@@ -62,7 +63,7 @@ sap.ui.define([
         },
     
         nodeHasChildren: function(oNode) {
-            Log.warning("root.model.hListBinding#nodeHasChildren(" + oNode.type + ")");
+           // Log.warning("root.model.hListBinding#nodeHasChildren(" + oNode.type + ")");
             return oNode.type === "folder";
         },
     
