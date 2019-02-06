@@ -174,7 +174,7 @@ sap.ui.define([
                     
                     if (remains > 0) {
                        if (!assign_shifts && args && (id < args.begin) && (id + remains >= args.begin)) {
-                          var first = Math.max(_last, last + (args.begin-id) - 10),
+                          var first = Math.max(_last, _last + (args.begin-id) - 10),
                               number = Math.min(elem._nchilds - first, 100);
                           requests.push("path=" + path + "&first=" + first + "&number=" + number);
                        }
