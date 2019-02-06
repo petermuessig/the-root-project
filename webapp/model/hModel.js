@@ -118,6 +118,10 @@ sap.ui.define([
               }
            }
 
+           // reset existing nodes if reply does not match with expectation 
+           if (!smart_merge || (elem._nchilds != reply.nchilds))
+              this.setProperty("/nodes", {});
+
            if (!smart_merge) {
               elem._nchilds = reply.nchilds;
               elem._childs = reply.nodes;
@@ -152,7 +156,9 @@ sap.ui.define([
               
               if (elem._expanded) {
                  if (elem._childs === undefined) {
-                    id += elem._nchilds || 0; // we know how many childs are, do not make request here
+                    // do nothing, childs are not visible as long as we do not have eny list
+                    
+                    // id += 0; 
                  } else {
 
                     if (elem._first) 
@@ -186,9 +192,8 @@ sap.ui.define([
            var pthis = this,
                id = 0,         // current id, at the same time number of items
                threshold = args.threshold || this.threshold || 100,
-               threshold2 = Math.round(threshold/2); 
-           
-           var nodes = this.getProperty("/nodes");
+               threshold2 = Math.round(threshold/2),
+               nodes = this.getProperty("/nodes");
            
            // main method to scan through all existing sub-folders
            function scan(lvl, elem, path) {
@@ -213,10 +218,10 @@ sap.ui.define([
               if (elem._childs === undefined) {
                  // add new request - can we check if only special part of childs is required? 
 
+                 // TODO: probably one could guess more precise request
                  pthis.submitRequest(elem, path);
                  
-                 id += elem._nchilds; // we know how many childs are
-                 return;
+                 return;  
               } 
 
               // check if scan is required
@@ -267,10 +272,13 @@ sap.ui.define([
            }
            
            scan(0, this.h, "/");
+           
+           if (this.getProperty("/length") != id)
+              console.log('LENGTH MISMATCH', this.getProperty("/length"), id);
 
+           // QUESTION: WHY TO SET LENGTH HERE???
+           // Does not work without???
            this.setProperty("/length", id); // update length property
-           this.setProperty("/nodes", nodes); 
-           args.nodes = nodes; // return back values required to
 
            return id;
         },
@@ -285,8 +293,20 @@ sap.ui.define([
            if (elem._expanded) {
               delete elem._expanded;
               delete elem._childs;
+
+              // close folder - reassign shifts
+              this.setProperty("/nodes", {}); 
+              this.scanShifts();
+              
+              return;
+              
            } else if (elem.type === "folder") {
-              elem._expanded = true; 
+              
+              elem._expanded = true;
+              // structure is changing but not immediately
+              
+              return true;
+              
            } else {
               // nothing to do
               return;
@@ -294,9 +314,6 @@ sap.ui.define([
            
            // for now - reset all existing nodes and rebuild from the beginning
            // all nodes should be created from scratch
-           this.setProperty("/nodes", {}); 
-           
-           this.scanShifts();
            
            // no need to update - this should be invoked from openui anyway
            //   if (this.oBinding) this.oBinding.checkUpdate(true);

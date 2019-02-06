@@ -27,8 +27,10 @@ sap.ui.define([
            
            var aNodes = [];
            
+           var nodes = this.getModel().getProperty("/nodes");
+           
            for (var i = args.begin; i < args.end; i++) {
-              var oNode = args.nodes[i];
+              var oNode = nodes[i];
               if (oNode) {
                  aNodes.push({
                     type: oNode.type,
@@ -87,7 +89,10 @@ sap.ui.define([
         // called by the TreeTable when a node is expanded/collapsed
         toggleIndex: function(iIndex) {
             Log.warning("root.model.hListBinding#toggleIndex(" + iIndex + ")");
-            this.getModel().toggleNode(iIndex);
+            if (this.getModel().toggleNode(iIndex))
+               this.checkUpdate(true);
+            
+            // QUESTION: why one should call checkUpdate?, should it be done automatically always? 
         },
     
         getSelectedIndex: function() {
