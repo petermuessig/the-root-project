@@ -102,6 +102,8 @@ sap.ui.define([
           }.bind(this, request));
         },
         
+        // process reply from server
+        // In the future reply will be received via websocket channel
         processResponse: function(reply) {
            var elem = this.getNodeByPath(reply.path);
            
@@ -142,8 +144,8 @@ sap.ui.define([
         
         // return element of hierarchical structure by TreeTable index 
         getElementByIndex: function(indx) {
-           var data = this.getProperty("/"),
-               node = data.nodes[indx];
+           var nodes = this.getProperty("/nodes"),
+               node = nodes ? nodes[indx] : null;
            
            return node ? node._elem : null;
         },
@@ -153,7 +155,7 @@ sap.ui.define([
            
            var id = 0;
            
-           function scan(lvl, elem, path) {
+           function scan(lvl, elem) {
               
               id++;
 
@@ -161,41 +163,47 @@ sap.ui.define([
               
               if (elem._expanded) {
                  if (elem._childs === undefined) {
-                    // do nothing, childs are not visible as long as we do not have eny list
+                    // do nothing, childs are not visible as long as we do not have any list
                     
                     // id += 0; 
                  } else {
 
+                    // gap at the begin
                     if (elem._first) 
                        id += elem._first;
 
+                    // jump over all childs
                     for (var k=0;k<elem._childs.length;++k)
-                       scan(lvl+1, elem._childs[k], path + elem._childs[k]._name + "/");
+                       scan(lvl+1, elem._childs[k]);
                     
-                    // check elements at the end
+                    // gap at the end
                     var _last = (elem._first || 0) + elem._childs.length;
                     var _remains = elem._nchilds  - _last;
                     if (_remains > 0) id += _remains;
                  }
               }
               
+              // this shift can be later applied to jump over all elements 
               elem._shift = id - before_id;  
            }
 
-           scan(0, this.h, "/");
+           scan(0, this.h);
            
            this.setProperty("/length", id);
            
            return id;
         },
         
-        
-        // central method to create list of flat nodes using also selection when provided
-        // returns -1 if there are running requests otherwise returns total number of items
+        // main  method to create flat list of nodes - only whose which are specified in selection
+        // following arguments:
+        //    args.begin     - first visisble element from flat list
+        //    args.end       - first not-visisble element
+        //    args.threshold - extra elements (before/after) which probably should be prefetched 
+        // returns total number of nodes
         buildFlatNodes: function(args) {
 
            var pthis = this,
-               id = 0,         // current id, at the same time number of items
+               id = 0,            // current id, at the same time number of items
                threshold = args.threshold || this.threshold || 100,
                threshold2 = Math.round(threshold/2),
                nodes = this.reset_nodes ? {} : this.getProperty("/nodes");
@@ -291,6 +299,7 @@ sap.ui.define([
            return id;
         },
 
+        // toggle expand state of specified node
         toggleNode: function(index) {
            
            var elem = this.getElementByIndex(index);
@@ -327,6 +336,8 @@ sap.ui.define([
            //   if (this.oBinding) this.oBinding.checkUpdate(true);
         },
         
+        
+        // change sorting method, for now server supports default, "direct" and "reverse"
         changeSortOrder: function(newValue) {
            if (newValue === undefined)
                newValue = this.getProperty("/sortOrder") || "";
