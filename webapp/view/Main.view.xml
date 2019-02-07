@@ -24,7 +24,7 @@
 					<Page>
 						<customHeader>
 							<OverflowToolbar>
-								<Button icon="sap-icon://sort" type="Transparent" />
+								<Button icon="sap-icon://sort" type="Transparent" press="changeSort"/>
 								<Button icon="sap-icon://filter" type="Transparent" />
 								<Button icon="sap-icon://synchronize" type="Transparent" />
 								<!-- <Label text="Draw:" /> -->
