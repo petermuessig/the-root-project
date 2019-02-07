@@ -24,6 +24,8 @@ sap.ui.define([
             
             this.loadDataCounter = 0; // counter of number of nodes
             
+            this.sortOrder = "";
+            
             this.threshold = 100; // default threshold to prefetch items
             
             // submit top-level request already when construct model
@@ -64,6 +66,7 @@ sap.ui.define([
         },
 
         // submit next request to the server 
+        // now using simple HTTP requests, in ROOT websocket communication will be used
         submitRequest: function(elem, path, first, number) {
            
            if (elem._requested) return;
@@ -74,6 +77,9 @@ sap.ui.define([
            var request = "path=" + path;
            if ((first !== undefined) && (number !== undefined))
               request += "&first=" + first + "&number=" + number;
+           
+           if (this.sortOrder)
+              request += "&sort=" + this.sortOrder;
 
            // TODO: here is just HTTP request, in ROOT we will use websocket to send requests and process replies 
            jQuery.ajax({
@@ -319,6 +325,28 @@ sap.ui.define([
            
            // no need to update - this should be invoked from openui anyway
            //   if (this.oBinding) this.oBinding.checkUpdate(true);
+        },
+        
+        changeSortOrder: function(newValue) {
+           if (newValue === undefined)
+               newValue = this.getProperty("/sortOrder") || "";
+
+           if ((newValue !== "") && (newValue !=="direct") && (newValue !== "reverse")) {
+              console.error('WRONG sorting order ', newValue, 'use default');
+              newValue = "";
+           }
+           
+           // ignore same value
+           if (newValue === this.sortOrder)
+              return;
+           
+           
+           this.sortOrder = newValue;
+           
+           // now we should request values once again
+
+           this.submitRequest(this.h, "/");
+           
         }
 
     });

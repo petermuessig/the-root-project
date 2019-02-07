@@ -1,6 +1,7 @@
 <mvc:View controllerName="root.controller.Main"
 		xmlns:mvc="sap.ui.core.mvc"
 		xmlns:layout="sap.ui.layout"
+      xmlns:core="sap.ui.core"
 		xmlns:table="sap.ui.table"
 		displayBlock="true"
 		xmlns="sap.m">
@@ -48,8 +49,11 @@
 						</content>
 						<footer>
 							<Toolbar>
-								<Label text="Filter:" />
-								<ComboBox />
+								<Label text="Sorting:" />
+								<ComboBox selectedKey="{/sortOrder}" change="sortOrderChanged">
+                           <core:Item key="direct" text="Sorted"/>
+                           <core:Item key="reverse" text="Reverse"/>
+                        </ComboBox>
 							</Toolbar>
 						</footer>
 					</Page>
