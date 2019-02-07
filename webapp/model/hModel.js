@@ -106,7 +106,6 @@ sap.ui.define([
            
            var smart_merge = false;
            
-           // TODO: one could merge items together to keep subfolder structures
            if ((elem._nchilds === reply.nchilds) && elem._childs && reply.nodes) {
               if (elem._first + elem._childs.length == reply.first) {
                  elem._childs = elem._childs.concat(reply.nodes);
@@ -118,10 +117,6 @@ sap.ui.define([
               }
            }
 
-           // reset existing nodes if reply does not match with expectation 
-           if (!smart_merge || (elem._nchilds != reply.nchilds))
-              this.setProperty("/nodes", {});
-
            if (!smart_merge) {
               elem._nchilds = reply.nchilds;
               elem._childs = reply.nodes;
@@ -129,7 +124,11 @@ sap.ui.define([
            }
            
            this.scanShifts();
-           
+
+           // reset existing nodes if reply does not match with expectation 
+           if (!smart_merge)
+              this.reset_nodes = true;
+
            if (this.loadDataCounter == 0)
               if (this.oBinding) 
                  this.oBinding.checkUpdate(true);
@@ -193,7 +192,7 @@ sap.ui.define([
                id = 0,         // current id, at the same time number of items
                threshold = args.threshold || this.threshold || 100,
                threshold2 = Math.round(threshold/2),
-               nodes = this.getProperty("/nodes");
+               nodes = this.reset_nodes ? {} : this.getProperty("/nodes");
            
            // main method to scan through all existing sub-folders
            function scan(lvl, elem, path) {
@@ -273,12 +272,15 @@ sap.ui.define([
            
            scan(0, this.h, "/");
            
-           if (this.getProperty("/length") != id)
-              console.log('LENGTH MISMATCH', this.getProperty("/length"), id);
+           if (this.getProperty("/length") != id) {
+              console.error('LENGTH MISMATCH', this.getProperty("/length"), id);
+              this.setProperty("/length", id); // update length property
+           }
 
-           // QUESTION: WHY TO SET LENGTH HERE???
-           // Does not work without???
-           this.setProperty("/length", id); // update length property
+           if (this.reset_nodes) {
+              this.setProperty("/nodes", nodes);
+              delete this.reset_nodes;
+           }
 
            return id;
         },
@@ -295,10 +297,10 @@ sap.ui.define([
               delete elem._childs;
 
               // close folder - reassign shifts
-              this.setProperty("/nodes", {}); 
+              this.reset_nodes = true;
               this.scanShifts();
               
-              return;
+              return true;
               
            } else if (elem.type === "folder") {
               
