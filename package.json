@@ -17,7 +17,7 @@
     "@openui5/themelib_sap_belize": "^1.61.2"
   },
   "devDependencies": {
-    "@ui5/cli": "^1.0.0",
+    "@ui5/cli": "^1.2.1",
     "compression": "^1.7.3",
     "express": "^4.16.4",
     "http-proxy-middleware": "^0.17.4",

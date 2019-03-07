@@ -24,15 +24,15 @@ sap.ui.define([
                     var oNode = data[i];
                     if (oNode) {
                         aNodes.push({
+                            // API for the Control: sap.ui.table.Row
                             context: this.getModel().getContext(this.getPath() + "/" + i),
-                            type: oNode.type,
-                            isLeaf:  oNode.type === "file",
                             level: oNode.level,
                             nodeState: {
                                 expanded: oNode.expanded,
-                                selected: oNode.selected,
-                                sum: false
-                            } 
+                                selected: oNode.selected
+                            },
+                            // only for internal usage in the ListBinding
+                            _type: oNode.type
                         });
                     }
                 }
@@ -61,7 +61,7 @@ sap.ui.define([
     
         nodeHasChildren: function(oNode) {
             Log.warning("root.model.ListBinding#nodeHasChildren(" + oNode.context.getPath() + ")");
-            return oNode.type === "folder";
+            return oNode._type === "folder";
         },
     
         isExpanded: function(iIndex) {
@@ -91,6 +91,7 @@ sap.ui.define([
     
         isIndexSelectable: function() {
             Log.warning("root.model.ListBinding#isIndexSelectable(" + JSON.stringify(arguments) + ")");
+            return true;
         }
 
     });

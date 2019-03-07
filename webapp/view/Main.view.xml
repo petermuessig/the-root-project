@@ -36,6 +36,7 @@
 								title="Browser"
 								columnHeaderVisible="false"
 								editable="false"
+								enableBusyIndicator="true"
 								enableSelectAll="false"
 								selectionBehavior="RowOnly"
 								selectionMode="Single"
