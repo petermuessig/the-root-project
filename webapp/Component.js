@@ -15,9 +15,9 @@ sap.ui.define([
 			manifest: "json"
 		},
 
-		
+
 		// QUESTION: can we do it without Component.js, assign model directly for TreeTable control?
-		
+
 		/**
 		 * The component is initialized by UI5 automatically during the startup of the app and calls the init method once.
 		 * @public
@@ -35,9 +35,9 @@ sap.ui.define([
 
 			// old RootModel with flat list on server side
 			// this.setModel(new RootModel("/data"));
-			
+
 			// this is new model, flat list produced on client side
-			this.setModel(new hRootModel("/hierarchy"));
+			this.setModel(new hRootModel("/hierarchy"), "browse");
 
 		}
 	});

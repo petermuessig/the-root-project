@@ -41,16 +41,16 @@
 								selectionBehavior="RowOnly"
 								selectionMode="Single"
 								visibleRowCountMode="Auto"
-								rows="{/nodes}">
+								rows="{browse>/nodes}">
 								<table:columns>
-									<table:Column label="Name" template="name"></table:Column>
+									<table:Column label="Name" template="browse>name"></table:Column>
 								</table:columns>
 							</table:TreeTable>
 						</content>
 						<footer>
 							<Toolbar>
 								<Label text="Sorting:" />
-								<ComboBox selectedKey="{/sortOrder}" change="sortOrderChanged">
+								<ComboBox selectedKey="{browse>/sortOrder}" change="sortOrderChanged">
                            <core:Item key="direct" text="Sorted"/>
                            <core:Item key="reverse" text="Reverse"/>
                         </ComboBox>
@@ -67,12 +67,12 @@
 								<items >
 									<TabContainerItem name="Canvas_1">
 										<content>
-											
+
 										</content>
 									</TabContainerItem>
 									<TabContainerItem name="Editor 1">
 										<content>
-											
+
 										</content>
 									</TabContainerItem>
 								</items>

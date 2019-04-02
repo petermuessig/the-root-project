@@ -33,7 +33,8 @@ sap.ui.define([
         },
 
         bindTree: function(sPath, oContext, aFilters, mParameters, aSorters) {
-           Log.warning("root.model.hModel#bindTree()");
+           Log.warning("root.model.hModel#bindTree() " + sPath);
+           console.error("Do binding - where?");
            this.oBinding = new hListBinding(this, sPath, oContext, aFilters, mParameters, aSorters);
            return this.oBinding;
         },
