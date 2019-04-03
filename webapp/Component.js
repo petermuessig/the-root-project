@@ -12,7 +12,8 @@ sap.ui.define([
 	return UIComponent.extend("root.Component", {
 
 		metadata: {
-			manifest: "json"
+			manifest: "json",
+			id: "myId"
 		},
 
 
@@ -38,6 +39,7 @@ sap.ui.define([
 
 			// this is new model, flat list produced on client side
 			this.setModel(new hRootModel("/hierarchy"), "browse");
+
 
 		}
 	});

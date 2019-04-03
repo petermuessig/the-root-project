@@ -1,9 +1,21 @@
 sap.ui.define([
-	"sap/ui/core/mvc/Controller"
-], function (Controller) {
+	"sap/ui/core/mvc/Controller",
+	"root/model/hModel"
+], function (Controller, hRootModel) {
 	"use strict";
 
 	return Controller.extend("root.controller.Main", {
+
+
+	   onInit: function() {
+	      console.log('!!!Creating Main controller!!!!');
+
+	      // Not exists
+	      //this.setModel(new hRootModel("/hierarchy"), "browse");
+
+	      // bindTree method of model not invoked
+	      // sap.ui.getCore().setModel(new hRootModel("/hierarchy"), "browse");
+	   },
 
 	   changeSort: function() {
          var model = this.getView().getModel("browse");
