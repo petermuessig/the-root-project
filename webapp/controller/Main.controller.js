@@ -10,11 +10,8 @@ sap.ui.define([
 	   onInit: function() {
 	      console.log('!!!Creating Main controller!!!!');
 
-	      // Not exists
-	      //this.setModel(new hRootModel("/hierarchy"), "browse");
-
-	      // bindTree method of model not invoked
-	      // sap.ui.getCore().setModel(new hRootModel("/hierarchy"), "browse");
+	      // assign model in the controller - more flexible solution for the complex applications
+	      this.getView().setModel(new hRootModel("/hierarchy"), "browse");
 	   },
 
 	   changeSort: function() {
